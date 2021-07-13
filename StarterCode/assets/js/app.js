@@ -54,6 +54,15 @@ d3.csv("assets/data/data.csv").then(function(healthData) {
     chartGroup.append("g")
         .call(leftAxis);
 
+    chartGroup.append("g")
+        .data(healthData)
+        .enter()
+        .append("text")
+        .attr("dx", d => xLinearScale(d.obesity))
+        .attr("dy", d => yLinearScale(d.income))
+            .text(function(d){
+                return d.abbr
+        });
     // Step 5: Create Circles
     // ==============================
     var circlesGroup = chartGroup.selectAll("circle")
