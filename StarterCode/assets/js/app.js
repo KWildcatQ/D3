@@ -24,13 +24,14 @@ var chartGroup = svg.append("g")
 // Import Data
 d3.csv("assets/data/data.csv").then(function(healthData) {
 
-    // Step 1: Parse Data/Cast as numbers
+    // Parse Data/Cast as numbers
     // ==============================
     healthData.forEach(function(data) {
         data.obesity = +data.obesity;
         data.income = +data.income;
       });
-    // Step 2: Create scale functions
+
+    // Create scale functions
     // ==============================
     var xLinearScale = d3.scaleLinear()
         .domain([20, d3.max(healthData, d => d.obesity)])
@@ -40,13 +41,13 @@ d3.csv("assets/data/data.csv").then(function(healthData) {
         .domain([0, d3.max(healthData, d => d.income)])
         .range([height, 0]);
 
-    // Step 3: Create axis functions
+    // Create axis functions
     // ==============================
     var bottomAxis = d3.axisBottom(xLinearScale);
     var leftAxis = d3.axisLeft(yLinearScale);
 
-    // Step 4: Append Axes to the chart
-    // ==============================
+    // Append Axes to the chart and Create State Abbreviations
+    // ==========================================================
     chartGroup.append("g")
         .attr("transform", `translate(0, ${height})`)
         .call(bottomAxis);
@@ -54,16 +55,19 @@ d3.csv("assets/data/data.csv").then(function(healthData) {
     chartGroup.append("g")
         .call(leftAxis);
 
-    chartGroup.append("g")
-        .data(healthData)
-        .enter()
-        .append("text")
-        .attr("dx", d => xLinearScale(d.obesity))
-        .attr("dy", d => yLinearScale(d.income))
-            .text(function(d){
-                return d.abbr
-        });
-    // Step 5: Create Circles
+    svg.append("g")
+    .selectAll("circle")
+    .data(healthData)
+    .enter()
+    .append("text")
+    .text(function(d){
+        return d.abbr
+    })
+    .attr("transform", `translate(${margin.left}, ${margin.top})`)
+    .attr("dx", d => xLinearScale(d.obesity) - 10) 
+    .attr("dy", d => yLinearScale(d.income) + 5); 
+
+    // Create Circles
     // ==============================
     var circlesGroup = chartGroup.selectAll("circle")
       .data(healthData)
@@ -73,9 +77,9 @@ d3.csv("assets/data/data.csv").then(function(healthData) {
       .attr("cy", d => yLinearScale(d.income))
       .attr("r", "15")
       .attr("fill", "blue")
-      .attr("opacity", ".5");
+      .attr("opacity", ".2");
 
-    // Step 6: Initialize tool tip
+    // Initialize tool tip
     // ==============================
     var toolTip = d3.tip()
       .attr("class", "tooltip")
@@ -84,19 +88,23 @@ d3.csv("assets/data/data.csv").then(function(healthData) {
         return (`${d.state}<br>Obsesity: ${d.obesity}<br>Income: ${d.income}`);
       });
 
-    // Step 7: Create tooltip in the chart
+    // Create tooltip in the chart
     // ==============================
     chartGroup.call(toolTip);
 
-    // Step 8: Create event listeners to display and hide the tooltip
+    // Create event listeners to display and hide the tooltip
     // ==============================
     circlesGroup.on("click", function(data) {
         toolTip.show(data, this);
       })
+        // onmouseover event
+        .on("mouseover", function(data) {
+          toolTip.show(data, this);
+      })
         // onmouseout event
         .on("mouseout", function(data, index) {
           toolTip.hide(data);
-        });
+      });
 
     // Create axes labels
     chartGroup.append("text")
